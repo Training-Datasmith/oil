@@ -1,6 +1,6 @@
 		$query = Model_<?php echo $model_name; ?>::query();
 
-		$pagination = Pagination::forge('<?php echo $plural_name."_pagination" ?>', array(
+		$pagination = Pagination::forge('<?php echo $plural_name.'_pagination' ?>', array(
 			'total_items' => $query->count(),
 			'uri_segment' => 'page',
 		));

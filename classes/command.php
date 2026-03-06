@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Fuel is a fast, lightweight, community driven PHP 5.4+ framework.
  *
@@ -21,116 +23,81 @@ namespace Oil;
  */
 class Command
 {
-	public static function init($args)
-	{
-		\Config::load('oil', true);
+    public static function init($args): void
+    {
+        \Config::load('oil', true);
 
-		// Remove flag options from the main argument list
-		$args = self::_clear_args($args);
+        // Remove flag options from the main argument list
+        $args = self::_clear_args($args);
 
-		try
-		{
-			if ( ! isset($args[1]))
-			{
-				if (\Cli::option('v', \Cli::option('version')))
-				{
-					\Cli::write('Fuel: '.\Fuel::VERSION.' running in "'.\Fuel::$env.'" mode');
-					return;
-				}
+        try {
+            if (! isset($args[1])) {
+                if (\Cli::option('v', \Cli::option('version'))) {
+                    \Cli::write('Fuel: '.\Fuel::VERSION.' running in "'.\Fuel::$env.'" mode');
+                    return;
+                }
 
-				static::help();
-				return;
-			}
+                static::help();
+                return;
+            }
 
-			switch ($args[1])
-			{
-				case 'g':
-				case 'generate':
+            switch ($args[1]) {
+                case 'g':
+                case 'generate':
 
-					$action = isset($args[2]) ? $args[2] : 'help';
+                    $action = $args[2] ?? 'help';
 
-					$subfolder = 'orm';
-					if (is_int(strpos($action, '/')))
-					{
-						list($action, $subfolder)=explode('/', $action);
-					}
+                    $subfolder = 'orm';
+                    if (is_int(strpos($action, '/'))) {
+                        [$action, $subfolder] = explode('/', $action);
+                    }
 
-					switch ($action)
-					{
-						case 'config':
-						case 'controller':
-						case 'model':
-						case 'module':
-						case 'migration':
-						case 'task':
-						case 'package':
-							call_user_func('Oil\Generate::'.$action, array_slice($args, 3));
-						break;
+                    match ($action) {
+                        'config', 'controller', 'model', 'module', 'migration', 'task', 'package' => call_user_func('Oil\Generate::'.$action, array_slice($args, 3)),
+                        'views' => call_user_func(Oil\Generate::views(...), array_slice($args, 3), $subfolder),
+                        'admin' => call_user_func(Oil\Generate_Admin::forge(...), array_slice($args, 3), $subfolder),
+                        'scaffold' => call_user_func(Oil\Generate_Scaffold::forge(...), array_slice($args, 3), $subfolder),
+                        default => Generate::help(),
+                    };
 
-						case 'views':
-							call_user_func('Oil\Generate::views', array_slice($args, 3), $subfolder);
-						break;
+                    break;
 
-						case 'admin':
-							call_user_func('Oil\Generate_Admin::forge', array_slice($args, 3), $subfolder);
-						break;
+                case 'c':
+                case 'console':
 
-						case 'scaffold':
-							call_user_func('Oil\Generate_Scaffold::forge', array_slice($args, 3), $subfolder);
-						break;
+                    if (isset($args[2]) and $args[2] == 'help') {
+                        Console::help();
+                    } else {
+                        new Console();
+                    }
 
-						default:
-							Generate::help();
-					}
+                    break;
 
-				break;
+                case 'p':
+                case 'package':
 
-				case 'c':
-				case 'console':
+                    $action = $args[2] ?? 'help';
 
-					if (isset($args[2]) and $args[2] == 'help')
-					{
-						Console::help();
-					}
-					else
-					{
-						new Console;
-					}
+                    match ($action) {
+                        'install', 'uninstall' => call_fuel_func_array('Oil\Package::'.$action, array_slice($args, 3)),
+                        default => Package::help(),
+                    };
 
-				break;
+                    break;
 
-				case 'p':
-				case 'package':
+                case 'r':
+                case 'refine':
 
-					$action = isset($args[2]) ? $args[2] : 'help';
+                    $task = $args[2] ?? null;
+                    call_user_func(Oil\Refine::run(...), $task, array_slice($args, 3));
 
-					switch ($action)
-					{
-						case 'install':
-						case 'uninstall':
-							call_fuel_func_array('Oil\Package::'.$action, array_slice($args, 3));
-						break;
+                    break;
 
-						default:
-							Package::help();
-					}
+                case 't':
+                case 'test':
 
-				break;
-
-				case 'r':
-				case 'refine':
-
-					$task = isset($args[2]) ? $args[2] : null;
-					call_user_func('Oil\Refine::run', $task, array_slice($args, 3));
-
-				break;
-
-				case 't':
-				case 'test':
-
-					if (isset($args[2]) and $args[2] == 'help')
-					{
-		$output = <<<HELP
+                    if (isset($args[2]) and $args[2] == 'help') {
+                        $output = <<<HELP
 
 Usage:
   php oil [t|test]
@@ -156,90 +123,79 @@ Examples:
 Documentation:
   https://fuelphp.com/docs/packages/oil/test.html
 HELP;
-		\Cli::write($output);
-					}
-					else
-					{
-						$phpunit_command = \Config::get('oil.phpunit.binary_path', 'phpunit');
+                        \Cli::write($output);
+                    } else {
+                        $phpunit_command = \Config::get('oil.phpunit.binary_path', 'phpunit');
 
-						// Check if we might be using the phar library
-						$is_phar = false;
-						foreach(explode(':', getenv('PATH')) as $path)
-						{
-							if (is_file($path.DS.$phpunit_command))
-							{
-								$handle = fopen($path.DS.$phpunit_command, 'r');
-								$is_phar = fread($handle, 18) == '#!/usr/bin/env php';
-								fclose($handle);
-								if ($is_phar)
-								{
-									break;
-								}
-							}
-						}
+                        // Check if we might be using the phar library
+                        $is_phar = false;
+                        foreach (explode(':', getenv('PATH')) as $path) {
+                            if (is_file($path.DS.$phpunit_command)) {
+                                $handle = fopen($path.DS.$phpunit_command, 'r');
+                                $is_phar = fread($handle, 18) == '#!/usr/bin/env php';
+                                fclose($handle);
+                                if ($is_phar) {
+                                    break;
+                                }
+                            }
+                        }
 
-						// Suppressing this because if the file does not exist... well thats a bad thing and we can't really check
-						// I know that supressing errors is bad, but if you're going to complain: shut up. - Phil
-						$phpunit_autoload_path = \Config::get('oil.phpunit.autoload_path', 'PHPUnit/Autoload.php' );
-						@include_once $phpunit_autoload_path;
+                        // Suppressing this because if the file does not exist... well thats a bad thing and we can't really check
+                        // I know that supressing errors is bad, but if you're going to complain: shut up. - Phil
+                        $phpunit_autoload_path = \Config::get('oil.phpunit.autoload_path', 'PHPUnit/Autoload.php');
+                        @include_once $phpunit_autoload_path;
 
-						// Attempt to load PHUnit.  If it fails, we are done.
-						if ( ! $is_phar and ! class_exists('PHPUnit_Framework_TestCase'))
-						{
-							throw new Exception('PHPUnit does not appear to be installed.'.PHP_EOL.PHP_EOL."\tPlease visit https://phpunit.de and install.");
-						}
+                        // Attempt to load PHUnit.  If it fails, we are done.
+                        if (! $is_phar and ! class_exists('PHPUnit_Framework_TestCase')) {
+                            throw new Exception('PHPUnit does not appear to be installed.'.PHP_EOL.PHP_EOL."\tPlease visit https://phpunit.de and install.");
+                        }
 
-						// Check for a custom phpunit config, but default to the one from core
-						if (is_file(APPPATH.'phpunit.xml'))
-						{
-							$phpunit_config = APPPATH.'phpunit.xml';
-						}
-						else
-						{
-							$phpunit_config = COREPATH.'phpunit.xml';
-						}
+                        // Check for a custom phpunit config, but default to the one from core
+                        if (is_file(APPPATH.'phpunit.xml')) {
+                            $phpunit_config = APPPATH.'phpunit.xml';
+                        } else {
+                            $phpunit_config = COREPATH.'phpunit.xml';
+                        }
 
-						// CD to the root of Fuel and call up phpunit with the path to our config
-						$command = 'cd '.DOCROOT.'; '.$phpunit_command.' -c "'.$phpunit_config.'"';
+                        // CD to the root of Fuel and call up phpunit with the path to our config
+                        $command = 'cd '.DOCROOT.'; '.$phpunit_command.' -c "'.$phpunit_config.'"';
 
-						// Respect the group options
-						\Cli::option('group') and $command .= ' --group '.\Cli::option('group');
-						\Cli::option('exclude-group') and $command .= ' --exclude-group '.\Cli::option('exclude-group');
+                        // Respect the group options
+                        \Cli::option('group') and $command .= ' --group '.\Cli::option('group');
+                        \Cli::option('exclude-group') and $command .= ' --exclude-group '.\Cli::option('exclude-group');
 
-						// Respect the testsuite options
-						\Cli::option('testsuite') and $command .= ' --testsuite '.\Cli::option('testsuite');
+                        // Respect the testsuite options
+                        \Cli::option('testsuite') and $command .= ' --testsuite '.\Cli::option('testsuite');
 
-						// Respect the debug options
-						\Cli::option('debug') and $command .= ' --debug';
+                        // Respect the debug options
+                        \Cli::option('debug') and $command .= ' --debug';
 
-						// Respect the coverage-html option
-						\Cli::option('coverage-html') and $command .= ' --coverage-html '.\Cli::option('coverage-html');
-						\Cli::option('coverage-clover') and $command .= ' --coverage-clover '.\Cli::option('coverage-clover');
-						\Cli::option('coverage-text') and $command .= ' --coverage-text='.\Cli::option('coverage-text');
-						\Cli::option('coverage-php') and $command .= ' --coverage-php '.\Cli::option('coverage-php');
-						\Cli::option('log-junit') and $command .= ' --log-junit '.\Cli::option('log-junit');
-						\Cli::option('file') and $command .= ' '.\Cli::option('file');
+                        // Respect the coverage-html option
+                        \Cli::option('coverage-html') and $command .= ' --coverage-html '.\Cli::option('coverage-html');
+                        \Cli::option('coverage-clover') and $command .= ' --coverage-clover '.\Cli::option('coverage-clover');
+                        \Cli::option('coverage-text') and $command .= ' --coverage-text='.\Cli::option('coverage-text');
+                        \Cli::option('coverage-php') and $command .= ' --coverage-php '.\Cli::option('coverage-php');
+                        \Cli::option('log-junit') and $command .= ' --log-junit '.\Cli::option('log-junit');
+                        \Cli::option('file') and $command .= ' '.\Cli::option('file');
 
-						\Cli::write('Tests Running...This may take a few moments.', 'green');
+                        \Cli::write('Tests Running...This may take a few moments.', 'green');
 
-						$return_code = 0;
-						foreach(explode(';', $command) as $c)
-						{
-							passthru($c, $return_code_task);
-							// Return failure if any subtask fails
-							$return_code |= $return_code_task;
-						}
-						exit($return_code);
-					}
+                        $return_code = 0;
+                        foreach (explode(';', $command) as $c) {
+                            passthru($c, $return_code_task);
+                            // Return failure if any subtask fails
+                            $return_code |= $return_code_task;
+                        }
+                        exit($return_code);
+                    }
 
-				break;
+                    break;
 
-				case 's':
-				case 'server':
+                case 's':
+                case 'server':
 
-					if (isset($args[2]) and $args[2] == 'help')
-					{
-		$output = <<<HELP
+                    if (isset($args[2]) and $args[2] == 'help') {
+                        $output = <<<HELP
 
 Usage:
   php oil [s|server]
@@ -260,74 +216,66 @@ Examples:
 Documentation:
   https://fuelphp.com/docs/packages/oil/server.html
 HELP;
-		\Cli::write($output);
-					}
-					else
-					{
-						if (version_compare(PHP_VERSION, '5.4.0') < 0)
-						{
-							\Cli::write('The PHP built-in webserver is only available on PHP 5.4+', 'red');
-							break;
-						}
+                        \Cli::write($output);
+                    } else {
+                        if (version_compare(PHP_VERSION, '5.4.0') < 0) {
+                            \Cli::write('The PHP built-in webserver is only available on PHP 5.4+', 'red');
+                            break;
+                        }
 
-						$php = \Cli::option('php', 'php');
-						$port = \Cli::option('p', \Cli::option('port', '8000'));
-						$host = \Cli::option('h', \Cli::option('host', 'localhost'));
-						$docroot = \Cli::option('d', \Cli::option('docroot', 'public'));
-						$router = \Cli::option('r', \Cli::option('router', __DIR__.DS.'..'.DS.'phpserver.php'));
+                        $php = \Cli::option('php', 'php');
+                        $port = \Cli::option('p', \Cli::option('port', '8000'));
+                        $host = \Cli::option('h', \Cli::option('host', 'localhost'));
+                        $docroot = \Cli::option('d', \Cli::option('docroot', 'public'));
+                        $router = \Cli::option('r', \Cli::option('router', __DIR__.DS.'..'.DS.'phpserver.php'));
 
-						\Cli::write("Listening on http://$host:$port");
-						\Cli::write("Document root is $docroot");
-						\Cli::write("Press Ctrl-C to quit.");
-						passthru("$php -S $host:$port -t $docroot $router");
-					}
-				break;
+                        \Cli::write("Listening on http://$host:$port");
+                        \Cli::write("Document root is $docroot");
+                        \Cli::write('Press Ctrl-C to quit.');
+                        passthru("$php -S $host:$port -t $docroot $router");
+                    }
+                    break;
 
-				case 'create':
-					\Cli::write('You can not use "oil create", a valid FuelPHP installation already exists in this directory', 'red');
-					break;
+                case 'create':
+                    \Cli::write('You can not use "oil create", a valid FuelPHP installation already exists in this directory', 'red');
+                    break;
 
-				default:
+                default:
 
-					static::help();
-			}
-		}
+                    static::help();
+            }
+        } catch (\Exception $e) {
+            static::print_exception($e);
+            exit(1);
+        }
+    }
 
-		catch (\Exception $e)
-		{
-			static::print_exception($e);
-			exit(1);
-		}
-	}
+    protected static function print_exception(\Exception $ex)
+    {
+        // create the error message, log and display it
+        $msg = $ex->getCode().' - '.$ex->getMessage().' in '.$ex->getFile().' on line '.$ex->getLine();
+        logger(\Fuel::L_ERROR, $msg);
+        \Cli::error('Uncaught exception '.$ex::class.': '.$msg);
 
-	protected static function print_exception(\Exception $ex)
-	{
-		// create the error message, log and display it
-		$msg = $ex->getCode().' - '.$ex->getMessage().' in '.$ex->getFile().' on line '.$ex->getLine();
-		logger(\Fuel::L_ERROR, $msg);
-		\Cli::error('Uncaught exception '.get_class($ex).': '.$msg);
+        // print a trace if not in production, don't want to spoil external logging
+        if (\Fuel::$env != \Fuel::PRODUCTION) {
+            \Cli::error('Callstack: ');
+            \Cli::error($ex->getTraceAsString());
+        }
+        \Cli::beep();
+        \Cli::option('speak') and `say --voice="Trinoids" "{$ex->getMessage()}"`;
 
-		// print a trace if not in production, don't want to spoil external logging
-		if (\Fuel::$env != \Fuel::PRODUCTION)
-		{
-			\Cli::error('Callstack: ');
-			\Cli::error($ex->getTraceAsString());
-		}
-		\Cli::beep();
-		\Cli::option('speak') and `say --voice="Trinoids" "{$ex->getMessage()}"`;
+        // print any previous exception(s) too...
+        if (($previous = $ex->getPrevious()) != null) {
+            \Cli::error('');
+            \Cli::error('Previous exception: ');
+            static::print_exception($previous);
+        }
+    }
 
-		// print any previous exception(s) too...
-		if (($previous = $ex->getPrevious()) != null)
-		{
-			\Cli::error('');
-			\Cli::error('Previous exception: ');
-			static::print_exception($previous);
-		}
-	}
-
-	public static function help()
-	{
-		echo <<<HELP
+    public static function help(): void
+    {
+        echo <<<HELP
 
 Usage:
   php oil [console|generate|package|refine|help|server|test]
@@ -355,23 +303,21 @@ Documentation:
 
 HELP;
 
-	}
+    }
 
-	protected static function _clear_args($actions = array())
-	{
-		foreach ($actions as $key => $action)
-		{
-			if (substr($action, 0, 1) === '-')
-			{
-				unset($actions[$key]);
-			}
+    protected static function _clear_args(array $actions = []): array
+    {
+        foreach ($actions as $key => $action) {
+            if (str_starts_with((string) $action, '-')) {
+                unset($actions[$key]);
+            }
 
-			// get rid of any junk added by Powershell on Windows...
-			isset($actions[$key]) and $actions[$key] = trim($actions[$key]);
-		}
+            // get rid of any junk added by Powershell on Windows...
+            isset($actions[$key]) and $actions[$key] = trim($actions[$key]);
+        }
 
-		return $actions;
-	}
+        return $actions;
+    }
 }
 
 /* End of file oil/classes/command.php */

@@ -6,14 +6,14 @@
 		<div class="form-group">
 			<?php echo "<?php echo Form::label('". \Inflector::humanize($field['name']) ."', '{$field['name']}', array('class'=>'control-label')); ?>\n"; ?>
 
-<?php switch($field['type']):
+<?php switch ($field['type']):
 
-				case 'text':
-					echo "\t\t\t\t<?php echo Form::textarea('{$field['name']}', Input::post('{$field['name']}', isset(\${$singular_name}) ? \${$singular_name}->{$field['name']} : ''), array('class' => 'col-md-8 form-control', 'rows' => 8, 'placeholder'=>'".\Inflector::humanize($field['name'])."')); ?>\n";
-				break;
+    case 'text':
+        echo "\t\t\t\t<?php echo Form::textarea('{$field['name']}', Input::post('{$field['name']}', isset(\${$singular_name}) ? \${$singular_name}->{$field['name']} : ''), array('class' => 'col-md-8 form-control', 'rows' => 8, 'placeholder'=>'".\Inflector::humanize($field['name'])."')); ?>\n";
+        break;
 
-				default:
-					echo "\t\t\t\t<?php echo Form::input('{$field['name']}', Input::post('{$field['name']}', isset(\${$singular_name}) ? \${$singular_name}->{$field['name']} : ''), array('class' => 'col-md-4 form-control', 'placeholder'=>'".\Inflector::humanize($field['name'])."')); ?>\n";
+    default:
+        echo "\t\t\t\t<?php echo Form::input('{$field['name']}', Input::post('{$field['name']}', isset(\${$singular_name}) ? \${$singular_name}->{$field['name']} : ''), array('class' => 'col-md-4 form-control', 'placeholder'=>'".\Inflector::humanize($field['name'])."')); ?>\n";
 
 endswitch; ?>
 

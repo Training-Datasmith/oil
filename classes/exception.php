@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Fuel is a fast, lightweight, community driven PHP 5.4+ framework.
  *
@@ -22,10 +24,10 @@ namespace Oil;
  */
 class Exception extends \Exception
 {
-//	public function __toString()
-//	{
-//		\Cli::write('Error: ' . $this->message);
-//	}
+    //	public function __toString()
+    //	{
+    //		\Cli::write('Error: ' . $this->message);
+    //	}
 
 }
 

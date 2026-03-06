@@ -34,17 +34,16 @@
 							</li>
 
 							<?php
-								foreach (new GlobIterator(APPPATH.'classes/controller/admin/*.php') as $file)
-								{
-									$section_segment = $file->getBasename('.php');
-									$section_title = Inflector::humanize($section_segment);
-							?>
+                                foreach (new GlobIterator(APPPATH.'classes/controller/admin/*.php') as $file) {
+                                    $section_segment = $file->getBasename('.php');
+                                    $section_title = Inflector::humanize($section_segment);
+                                    ?>
 									<li class="<?php echo Uri::segment(2) == $section_segment ? 'active' : '' ?>">
 										<?php echo Html::anchor('admin/'.$section_segment, $section_title) ?>
 									</li>
 							<?php
-								}
-							?>
+                                }
+		    ?>
 						</ul>
 
 						<ul class="nav navbar-nav navbar-right">
@@ -100,9 +99,9 @@
 			</footer>
 		</div>
 		
-		<?php echo Asset::js(array(
-			'https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js',
-			'bootstrap.js',
-		)); ?>
+		<?php echo Asset::js([
+            'https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js',
+            'bootstrap.js',
+        ]); ?>
 	</body>
 </html>
