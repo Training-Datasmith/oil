@@ -48,7 +48,7 @@ class Command
                     $action = $args[2] ?? 'help';
 
                     $subfolder = 'orm';
-                    if (is_int(strpos($action, '/'))) {
+                    if (str_contains($action, '/')) {
                         [$action, $subfolder] = explode('/', $action);
                     }
 
@@ -129,11 +129,13 @@ HELP;
 
                         // Check if we might be using the phar library
                         $is_phar = false;
-                        foreach (explode(':', getenv('PATH')) as $path) {
+                        foreach (explode(PATH_SEPARATOR, getenv('PATH')) as $path) {
                             if (is_file($path.DS.$phpunit_command)) {
                                 $handle = fopen($path.DS.$phpunit_command, 'r');
-                                $is_phar = fread($handle, 18) == '#!/usr/bin/env php';
-                                fclose($handle);
+                                if ($handle !== false) {
+                                    $is_phar = fread($handle, 18) == '#!/usr/bin/env php';
+                                    fclose($handle);
+                                }
                                 if ($is_phar) {
                                     break;
                                 }
@@ -145,8 +147,8 @@ HELP;
                         $phpunit_autoload_path = \Config::get('oil.phpunit.autoload_path', 'PHPUnit/Autoload.php');
                         @include_once $phpunit_autoload_path;
 
-                        // Attempt to load PHUnit.  If it fails, we are done.
-                        if (! $is_phar and ! class_exists('PHPUnit_Framework_TestCase')) {
+                        // Attempt to load PHPUnit.  If it fails, we are done.
+                        if (! $is_phar and ! class_exists('PHPUnit\Framework\TestCase') and ! class_exists('PHPUnit_Framework_TestCase')) {
                             throw new Exception('PHPUnit does not appear to be installed.'.PHP_EOL.PHP_EOL."\tPlease visit https://phpunit.de and install.");
                         }
 
@@ -161,22 +163,22 @@ HELP;
                         $command = 'cd '.DOCROOT.'; '.$phpunit_command.' -c "'.$phpunit_config.'"';
 
                         // Respect the group options
-                        \Cli::option('group') and $command .= ' --group '.\Cli::option('group');
-                        \Cli::option('exclude-group') and $command .= ' --exclude-group '.\Cli::option('exclude-group');
+                        \Cli::option('group') and $command .= ' --group '.escapeshellarg(\Cli::option('group'));
+                        \Cli::option('exclude-group') and $command .= ' --exclude-group '.escapeshellarg(\Cli::option('exclude-group'));
 
                         // Respect the testsuite options
-                        \Cli::option('testsuite') and $command .= ' --testsuite '.\Cli::option('testsuite');
+                        \Cli::option('testsuite') and $command .= ' --testsuite '.escapeshellarg(\Cli::option('testsuite'));
 
                         // Respect the debug options
                         \Cli::option('debug') and $command .= ' --debug';
 
                         // Respect the coverage-html option
-                        \Cli::option('coverage-html') and $command .= ' --coverage-html '.\Cli::option('coverage-html');
-                        \Cli::option('coverage-clover') and $command .= ' --coverage-clover '.\Cli::option('coverage-clover');
-                        \Cli::option('coverage-text') and $command .= ' --coverage-text='.\Cli::option('coverage-text');
-                        \Cli::option('coverage-php') and $command .= ' --coverage-php '.\Cli::option('coverage-php');
-                        \Cli::option('log-junit') and $command .= ' --log-junit '.\Cli::option('log-junit');
-                        \Cli::option('file') and $command .= ' '.\Cli::option('file');
+                        \Cli::option('coverage-html') and $command .= ' --coverage-html '.escapeshellarg(\Cli::option('coverage-html'));
+                        \Cli::option('coverage-clover') and $command .= ' --coverage-clover '.escapeshellarg(\Cli::option('coverage-clover'));
+                        \Cli::option('coverage-text') and $command .= ' --coverage-text='.escapeshellarg(\Cli::option('coverage-text'));
+                        \Cli::option('coverage-php') and $command .= ' --coverage-php '.escapeshellarg(\Cli::option('coverage-php'));
+                        \Cli::option('log-junit') and $command .= ' --log-junit '.escapeshellarg(\Cli::option('log-junit'));
+                        \Cli::option('file') and $command .= ' '.escapeshellarg(\Cli::option('file'));
 
                         \Cli::write('Tests Running...This may take a few moments.', 'green');
 
@@ -218,11 +220,6 @@ Documentation:
 HELP;
                         \Cli::write($output);
                     } else {
-                        if (version_compare(PHP_VERSION, '5.4.0') < 0) {
-                            \Cli::write('The PHP built-in webserver is only available on PHP 5.4+', 'red');
-                            break;
-                        }
-
                         $php = \Cli::option('php', 'php');
                         $port = \Cli::option('p', \Cli::option('port', '8000'));
                         $host = \Cli::option('h', \Cli::option('host', 'localhost'));
@@ -232,7 +229,7 @@ HELP;
                         \Cli::write("Listening on http://$host:$port");
                         \Cli::write("Document root is $docroot");
                         \Cli::write('Press Ctrl-C to quit.');
-                        passthru("$php -S $host:$port -t $docroot $router");
+                        passthru(escapeshellarg($php).' -S '.escapeshellarg($host.':'.$port).' -t '.escapeshellarg($docroot).' '.escapeshellarg($router));
                     }
                     break;
 
@@ -263,7 +260,6 @@ HELP;
             \Cli::error($ex->getTraceAsString());
         }
         \Cli::beep();
-        \Cli::option('speak') and `say --voice="Trinoids" "{$ex->getMessage()}"`;
 
         // print any previous exception(s) too...
         if (($previous = $ex->getPrevious()) != null) {

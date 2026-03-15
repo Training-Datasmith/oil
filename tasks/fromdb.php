@@ -190,7 +190,7 @@ HELP;
         // get the list of all available tables
         try {
             $list = \DB::list_tables(null, \Cli::option('db', null));
-        } catch (\sFuelException $e) {
+        } catch (\FuelException $e) {
             \Cli::write('The database driver configured does not support listing tables. Please specify them manually.', 'red');
             exit();
         }

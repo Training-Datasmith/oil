@@ -29,7 +29,7 @@ class Console
     {
         error_reporting(E_ALL | E_STRICT);
 
-        ini_set('error_log', null);
+        ini_set('error_log', '');
         ini_set('log_errors', 1);
         ini_set('html_errors', 0);
         ini_set('display_errors', 0);
@@ -140,7 +140,7 @@ HELP;
         }
     }
 
-    private static function is_immediate(array $line): bool
+    private static function is_immediate(string $line): bool
     {
         $skip = [
             'class', 'declare', 'die', 'echo', 'exit', 'for',

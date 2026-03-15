@@ -49,9 +49,9 @@ class Package
             $packages = ['fuel-'.$package, $package];
 
             foreach ($packages as $package) {
-                $zip_url = 'http://' . rtrim((string) $source, '/').'/'.$package.'/zipball/'.$version;
+                $zip_url = 'https://' . rtrim((string) $source, '/').'/'.$package.'/zipball/'.$version;
 
-                if ($fp = @fopen($zip_url, 'r')) {
+                if ($fp = fopen($zip_url, 'r')) {
                     // We don't actually need this, just checking the file is there
                     fclose($fp);
 
@@ -143,7 +143,7 @@ HELP;
         mkdir($tmp_folder = APPPATH . 'tmp' . DS . $package . '-' . time());
 
         $zip_file = $tmp_folder . '.zip';
-        @copy($zip_url, $zip_file);
+        copy($zip_url, $zip_file);
 
         if (is_file($zip_file)) {
             $unzip = new \Unzip();
@@ -171,7 +171,7 @@ HELP;
 
             foreach ($files as $file) {
                 $path = str_replace($tmp_package_folder, $package_folder, $file);
-                chmod($path, octdec(755));
+                chmod($path, 0755);
                 \Cli::write("\t" . $path);
             }
         } else {
@@ -181,16 +181,16 @@ HELP;
 
     public static function _clone_package_repo($source, string $package, $version): void
     {
-        $repo_url = 'git://' . rtrim((string) $source, '/').'/'.$package . '.git';
+        $repo_url = 'https://' . rtrim((string) $source, '/').'/'.$package . '.git';
 
         \Cli::write('Downloading package: ' . $repo_url);
 
         $package_folder = PKGPATH . $package;
 
         // Clone to the package path
-        passthru(static::$git . ' clone ' . $repo_url . ' ' . $package_folder);
+        passthru(escapeshellarg(static::$git) . ' clone ' . escapeshellarg($repo_url) . ' ' . escapeshellarg($package_folder));
 
-        passthru(static::$git .' add ' . $package_folder . '/');
+        passthru(escapeshellarg(static::$git) . ' add ' . escapeshellarg($package_folder . '/'));
 
         \Cli::write('');
     }

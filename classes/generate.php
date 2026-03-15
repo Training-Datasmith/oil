@@ -144,7 +144,7 @@ CONF;
         }
 
         // Do we want a view or a presenter?
-        $with_presenter = \Cli::option('with-presenter') or \Cli::option('with-viewmodel');
+        $with_presenter = \Cli::option('with-presenter') || \Cli::option('with-viewmodel');
 
         $actions = $args;
 
@@ -250,7 +250,7 @@ PRESENTER;
 
         $args = static::normalize_args($args);
 
-        if (empty($singular) or strpos($singular, ':')) {
+        if (empty($singular) or str_contains($singular, ':')) {
             throw new Exception('Command is invalid.'.PHP_EOL."\tphp oil g model <modelname> [<fieldname1>:<type1> |<fieldname2>:<type2> |..]");
         }
 
@@ -500,7 +500,7 @@ CONTENTS;
 
 CONTENTS;
 
-                if ($read_only = \Cli::option('read-only') and is_string($read_only)) {
+                if (($read_only = \Cli::option('read-only')) && is_string($read_only)) {
                     $read_only = explode(',', $read_only);
                     $read_only = "'" . implode("', '", $read_only) . "'";
                     $read_only = <<<CONTENTS
@@ -700,7 +700,6 @@ MODEL;
     public static function views($args, $subfolder, $build = true): void
     {
         $controller = strtolower((string) array_shift($args));
-        \Inflector::humanize($controller);
 
         $base_path = APPPATH;
         if ($module = \Cli::option('module')) {
@@ -1501,7 +1500,7 @@ CLASS;
 
             @fclose($handle);
 
-            @chmod($file['path'], 0666);
+            @chmod($file['path'], 0644);
         }
 
         return $result;

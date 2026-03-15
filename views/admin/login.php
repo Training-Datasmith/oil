@@ -7,7 +7,7 @@
 			<?php endif; ?>
 
 			<?php if (isset($login_error)): ?>
-				<div class="error"><?php echo $login_error; ?></div>
+				<div class="error"><?php echo htmlspecialchars($login_error, ENT_QUOTES, 'UTF-8'); ?></div>
 			<?php endif; ?>
 
 			<div class="form-group <?php echo ! $val->error('email') ?: 'has-error' ?>">

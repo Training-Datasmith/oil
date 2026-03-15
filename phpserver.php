@@ -22,11 +22,22 @@ if (isset($_SERVER['SCRIPT_NAME'])) {
     }
 }
 
+// Resolve the path to prevent directory traversal
+$docroot = realpath($_SERVER['DOCUMENT_ROOT']) ?: $_SERVER['DOCUMENT_ROOT'];
+$resolved = realpath($file);
+if ($resolved !== false && strncmp($resolved, $docroot, strlen($docroot)) !== 0) {
+    // Path escapes document root — route normally
+    $_SERVER['SCRIPT_NAME'] = __FILE__;
+    include $docroot.'/index.php';
+    return;
+}
+$file = $resolved ?: $file;
+
 if (file_exists($file)) {
     // bypass existing file processing
     return false;
 } else {
     // route requests though the normal path
     $_SERVER['SCRIPT_NAME'] = __FILE__;
-    include $_SERVER['DOCUMENT_ROOT'].'/index.php';
+    include $docroot.'/index.php';
 }

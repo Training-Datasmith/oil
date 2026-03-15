@@ -5,7 +5,7 @@
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 
-		<title><?php echo $title; ?></title>
+		<title><?php echo htmlspecialchars($title, ENT_QUOTES, 'UTF-8'); ?></title>
 
 		<?php echo Asset::css('bootstrap.css'); ?>
 
@@ -48,7 +48,7 @@
 
 						<ul class="nav navbar-nav navbar-right">
 							<li class="dropdown">
-								<a data-toggle="dropdown" class="dropdown-toggle" href="#"><?php echo $current_user->username ?> <b class="caret"></b></a>
+								<a data-toggle="dropdown" class="dropdown-toggle" href="#"><?php echo htmlspecialchars($current_user->username, ENT_QUOTES, 'UTF-8') ?> <b class="caret"></b></a>
 								<ul class="dropdown-menu dropdown-menu-right">
 									<li><?php echo Html::anchor('admin/logout', 'Logout') ?></li>
 								</ul>
@@ -62,14 +62,14 @@
 		<div class="container">
 			<div class="row">
 				<div class="col-md-12">
-					<h1><?php echo $title; ?></h1>
+					<h1><?php echo htmlspecialchars($title, ENT_QUOTES, 'UTF-8'); ?></h1>
 					<hr>
 
 					<?php if (Session::get_flash('success')): ?>
 						<div class="alert alert-success alert-dismissable">
 							<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
 							<p>
-							<?php echo implode('</p><p>', (array) Session::get_flash('success')); ?>
+							<?php echo implode('</p><p>', array_map(fn($m) => htmlspecialchars($m, ENT_QUOTES, 'UTF-8'), (array) Session::get_flash('success'))); ?>
 							</p>
 						</div>
 					<?php endif; ?>
@@ -78,7 +78,7 @@
 					<div class="alert alert-danger alert-dismissable">
 						<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
 						<p>
-						<?php echo implode('</p><p>', (array) Session::get_flash('error')); ?>
+						<?php echo implode('</p><p>', array_map(fn($m) => htmlspecialchars($m, ENT_QUOTES, 'UTF-8'), (array) Session::get_flash('error'))); ?>
 						</p>
 					</div>
 					<?php endif; ?>
