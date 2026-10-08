@@ -13,7 +13,7 @@ docker run --rm -v /workspace:/app -w /app "$IMG" bash -lc '
   sed -i "s/deb.debian.org/archive.debian.org/g" /etc/apt/sources.list 2>/dev/null || true
   sed -i "s/security.debian.org/archive.debian.org/g" /etc/apt/sources.list 2>/dev/null || true
   sed -i "/buster-updates/d" /etc/apt/sources.list 2>/dev/null || true
-  apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq zip >/dev/null 2>&1 || true
+  apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq zip libzip-dev >/dev/null 2>&1 || true
   docker-php-ext-install zip >/dev/null 2>&1 || true
   php -d error_reporting=-1 vendor/bin/phpunit '"${EXTRA[*]}"'
 '

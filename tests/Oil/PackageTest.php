@@ -69,9 +69,15 @@ class PackageTest extends OilTestCase
 		file_put_contents($zipFile, $zipBody);
 		$server = $this->startZipServer($zipFile);
 		$script = TEST_ROOT.'/tests/scripts/package_install_direct.php';
+		$tmpRoot = rtrim(dirname(rtrim(APPPATH, DS)), DS);
+		putenv('OIL_TEST_TMP='.$tmpRoot);
 		$cmd = PHP_BINARY.' '.escapeshellarg($script).' '.$server['host'].' '.$server['port'];
 		ob_start();
-		exec($cmd, $out, $code);
+		$proc = proc_open($cmd, array(1 => array('pipe', 'w'), 2 => array('pipe', 'w')), $pipes, TEST_ROOT);
+		$out = stream_get_contents($pipes[1]).stream_get_contents($pipes[2]);
+		fclose($pipes[1]);
+		fclose($pipes[2]);
+		$code = proc_close($proc);
 		ob_end_clean();
 		proc_terminate($server['proc']);
 		$this->assertSame(0, $code);
@@ -99,7 +105,7 @@ class PackageTest extends OilTestCase
 		}
 		if ( ! is_file($zip))
 		{
-			$this->markTestSkipped('zip tooling is not available');
+			$this->fail('zip tooling is not available');
 		}
 		return file_get_contents($zip);
 	}

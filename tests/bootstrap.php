@@ -22,7 +22,16 @@ if ( ! defined('DS'))
 	define('DS', DIRECTORY_SEPARATOR);
 }
 
-$tmp = sys_get_temp_dir().DS.'oil-tests-'.getmypid();
+$tmpRoot = getenv('OIL_TEST_TMP');
+if ($tmpRoot === false || $tmpRoot === '')
+{
+	$tmp = sys_get_temp_dir().DS.'oil-tests-'.getmypid();
+	putenv('OIL_TEST_TMP='.$tmp);
+}
+else
+{
+	$tmp = rtrim($tmpRoot, DS);
+}
 define('DOCROOT', $tmp.DS.'docroot'.DS);
 define('APPPATH', $tmp.DS.'app'.DS);
 define('PKGPATH', $tmp.DS.'pkg'.DS);

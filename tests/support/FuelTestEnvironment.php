@@ -12,6 +12,7 @@ class FuelTestEnvironment
 		{
 			is_dir($dir) or mkdir($dir, 0755, true);
 		}
+		is_dir(APPPATH.'tmp') or mkdir(APPPATH.'tmp', 0755, true);
 	}
 
 	public static function resetWorkspace()
@@ -23,6 +24,7 @@ class FuelTestEnvironment
 		}
 		static::emptyDir(DOCROOT);
 		is_dir(DOCROOT) or mkdir(DOCROOT, 0755, true);
+		is_dir(APPPATH.'tmp') or mkdir(APPPATH.'tmp', 0755, true);
 	}
 
 	protected static function emptyDir($dir)

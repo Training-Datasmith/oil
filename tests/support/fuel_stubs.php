@@ -134,7 +134,12 @@ class Cli
 
 	public static function write($text, $foreground = null, $background = null)
 	{
-		static::$writes[] = is_array($text) ? implode("\n", $text) : (string) $text;
+		$line = is_array($text) ? implode("\n", $text) : (string) $text;
+		static::$writes[] = $line;
+		if (getenv('OIL_TEST_ECHO_CLI'))
+		{
+			fwrite(STDERR, $line.PHP_EOL);
+		}
 	}
 
 	public static function error($text)

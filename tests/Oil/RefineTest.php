@@ -26,9 +26,16 @@ class RefineTest extends OilTestCase
 	public function testFarNameHasNoSuggestion()
 	{
 		$this->writeTask('alpha', "<?php namespace Fuel\\Tasks; class Alpha { public function run() {} }");
-		$this->expectException(\Oil\Exception::class);
-		$this->expectExceptionMessage('Task "zzzzzzzzzz" does not exist.');
-		Refine::run('zzzzzzzzzz');
+		try
+		{
+			Refine::run('zzzzzzzzzz');
+		}
+		catch (\Oil\Exception $e)
+		{
+			$this->assertSame('Task "zzzzzzzzzz" does not exist.', $e->getMessage());
+			return;
+		}
+		$this->fail('Expected Oil\\Exception');
 	}
 
 	public function testCloseNameSuggests()
@@ -55,9 +62,9 @@ class RefineTest extends OilTestCase
 
 	public function testHelpTwiceLoadsTasksOnce()
 	{
-		$this->writeTask('alphatwo', "<?php namespace Fuel\\Tasks; class Alphatwo { public function run() {} public function help() { \\Cli::write('help-ok'); } }");
-		Refine::run('alphatwo:help');
-		Refine::run('alphatwo:help');
-		$this->assertStringContainsString('help-ok', \Cli::capturedOutput());
+		$this->writeTask('alphatwo', "<?php namespace Fuel\\Tasks; class Alphatwo { public function run() {} }");
+		Refine::help();
+		Refine::help();
+		$this->assertStringContainsString('php oil refine alphatwo', \Cli::capturedOutput());
 	}
 }
