@@ -2022,7 +2022,6 @@ CLASS;
 			}
 		}
 
-		$migrations = array();
 		foreach(new \GlobIterator($base_path .'migrations/*_*.php') as $file)
 		{
 			$migrations[] = $file->getPathname();
