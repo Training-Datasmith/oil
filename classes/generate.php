@@ -762,11 +762,15 @@ MODEL;
 
 		if ( ($folders = \Cli::option('folders')) !== true )
 		{
-			$folders = explode(',', $folders);
-
-			foreach ($folders as $folder)
+			if (is_string($folders))
 			{
-				static::$create_folders[] = $module_path.$folder;
+				$folders = explode(',', $folders);
+
+				foreach ($folders as $folder)
+				{
+					$folder = trim($folder);
+					$folder !== '' and static::$create_folders[] = $module_path.$folder;
+				}
 			}
 		}
 
@@ -823,7 +827,7 @@ VIEW;
 			// Generate with test?
  			$with_test = \Cli::option('with-test');
             		if ($with_test) {
-               			static::_create_test('View', $controller, $base_path, $nav_item);
+               			static::_create_test('View', $controller, $base_path, $action);
 			}
 
 			// Create this view
@@ -873,7 +877,10 @@ VIEW;
 		}
 
 		$duplicates = array();
-		foreach($migrations = new \GlobIterator($base_path.'migrations/*_'.$migration_name.'*') as $migration)
+		$migrations_path = $base_path.'migrations';
+		if (is_dir($migrations_path))
+		{
+			foreach($migrations = new \GlobIterator($migrations_path.DS.'*_'.$migration_name.'*') as $migration)
 		{
 			// check if it's really a duplicate
 			$part = explode('_', basename($migration->getFilename(), '.php'), 2);
@@ -888,6 +895,7 @@ VIEW;
 			}
 
 			$duplicates[] = $migration->getPathname();
+		}
 		}
 
 		// save the migration name, it's also used as table name
@@ -1806,7 +1814,7 @@ CLASS;
 							$option = array_shift($part_matches);
 							if (count($part_matches) > 0)
 							{
-								$option = $part_matches[0];
+								$part_matches = $part_matches[0];
 							}
 							else
 							{
@@ -1820,7 +1828,14 @@ CLASS;
 							case 'auto_increment':
 							case 'null':
 							case 'unsigned':
-								$part_matches = (bool) $part_matches;
+								if (is_string($part_matches))
+								{
+									$part_matches = filter_var($part_matches, FILTER_VALIDATE_BOOLEAN);
+								}
+								else
+								{
+									$part_matches = (bool) $part_matches;
+								}
 								break;
 						}
 
@@ -2022,9 +2037,14 @@ CLASS;
 			}
 		}
 
-		foreach(new \GlobIterator($base_path .'migrations/*_*.php') as $file)
+		$migrations = array();
+		$migrations_path = $base_path.'migrations';
+		if (is_dir($migrations_path))
 		{
-			$migrations[] = $file->getPathname();
+			foreach(new \GlobIterator($migrations_path.DS.'*_*.php') as $file)
+			{
+				$migrations[] = $file->getPathname();
+			}
 		}
 		if ( ! empty($migrations))
 		{

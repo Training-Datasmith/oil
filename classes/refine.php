@@ -72,7 +72,7 @@ class Refine
 
 			ksort($possibilities);
 
-			if ($possibilities and current($possibilities) <= 5)
+			if ($possibilities and key($possibilities) <= 5)
 			{
 				throw new Exception(sprintf('Task "%s" does not exist. Did you mean "%s"?', $task, current($possibilities)));
 			}
@@ -190,7 +190,7 @@ HELP;
 				$task_name = str_replace('.php', '', basename($file));
 				$class_name = '\\Fuel\\Tasks\\'.$task_name;
 
-				require $file;
+				require_once $file;
 
 				$reflect = new \ReflectionClass($class_name);
 
@@ -222,7 +222,7 @@ HELP;
 					$task_name = strtolower($module).'::'.str_replace('.php', '', basename($file));
 					$class_name = '\\Fuel\\Tasks\\'.str_replace('.php', '', basename($file));
 
-					require $file;
+					require_once $file;
 
 					$reflect = new \ReflectionClass($class_name);
 
